@@ -1,0 +1,13 @@
+# Dependencias
+node_modules/
+
+# Base de datos local
+database.sqlite
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

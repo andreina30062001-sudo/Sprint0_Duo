@@ -1,0 +1,17 @@
+{
+  "name": "mi-proyecto-xp",
+  "version": "1.0.0",
+  "description": "Gestión de Historias de Usuario con Pair Programming - Extreme Programming",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["xp", "pair-programming", "historias-usuario"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0",
+    "sql.js": "^1.11.0"
+  }
+}

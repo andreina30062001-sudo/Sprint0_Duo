@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard XP para gestión de Historias de Usuario con Pair Programming — Sistemas de Información 2">
+  <title>XP Board — Historias de Usuario</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Design Tokens ────────────────────────────────── */
+    :root {
+      --xp-bg:           #0a0d13;
+      --xp-surface:      #111621;
+      --xp-surface-alt:  #181e2c;
+      --xp-surface-hover:#1c2336;
+      --xp-border:       #232a3d;
+      --xp-border-light: #2c355050;
+      --xp-accent:       #6c63ff;
+      --xp-accent-soft:  rgba(108, 99, 255, .12);
+      --xp-accent-glow:  rgba(108, 99, 255, .30);
+      --xp-green:        #2dd4a8;
+      --xp-green-soft:   rgba(45, 212, 168, .12);
+      --xp-green-glow:   rgba(45, 212, 168, .25);
+      --xp-amber:        #f5a623;
+      --xp-amber-soft:   rgba(245, 166, 35, .12);
+      --xp-red:          #ef4565;
+      --xp-red-soft:     rgba(239, 69, 101, .10);
+      --xp-text:         #e2e5ef;
+      --xp-muted:        #6b7394;
+      --xp-radius:       12px;
+      --xp-radius-lg:    16px;
+      --xp-font:         'Inter', system-ui, -apple-system, sans-serif;
+      --sidebar-w:       320px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: var(--xp-font);
+      background: var(--xp-bg);
+      color: var(--xp-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Scrollbar ────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--xp-border); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--xp-muted); }
+
+    /* ── Header ───────────────────────────────────────── */
+    .xp-header {
+      background: linear-gradient(135deg, var(--xp-surface) 0%, #0e1219 100%);
+      border-bottom: 1px solid var(--xp-border);
+      padding: .85rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1020;
+      backdrop-filter: blur(16px);
+    }
+    .brand {
+      font-weight: 800;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+    }
+    .brand i { color: var(--xp-accent); font-size: 1.4rem; }
+    .brand-text {
+      background: linear-gradient(135deg, var(--xp-accent), var(--xp-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .xp-tag {
+      background: var(--xp-surface-alt);
+      border: 1px solid var(--xp-border);
+      color: var(--xp-muted);
+      font-size: .68rem;
+      font-weight: 600;
+      padding: .18rem .55rem;
+      border-radius: 100px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    /* ── Button: Add ──────────────────────────────────── */
+    .btn-xp-primary {
+      background: linear-gradient(135deg, var(--xp-accent), #8b7dff);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      padding: .5rem 1.2rem;
+      border-radius: 10px;
+      font-size: .85rem;
+      transition: transform .18s, box-shadow .18s;
+    }
+    .btn-xp-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--xp-accent-glow);
+      color: #fff;
+    }
+
+    /* ── Layout: Main + Sidebar ───────────────────────── */
+    .app-layout {
+      display: flex;
+      min-height: calc(100vh - 56px);
+    }
+    .main-content {
+      flex: 1;
+      padding: 1.5rem 2rem;
+      min-width: 0;
+    }
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--xp-surface);
+      border-left: 1px solid var(--xp-border);
+      padding: 1.5rem 1.2rem;
+      overflow-y: auto;
+      max-height: calc(100vh - 56px);
+      position: sticky;
+      top: 56px;
+    }
+
+    /* ── Stats Bar ────────────────────────────────────── */
+    .stats-bar {
+      display: flex;
+      gap: .8rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--xp-surface);
+      border: 1px solid var(--xp-border);
+      border-radius: var(--xp-radius);
+      padding: .8rem 1.2rem;
+      flex: 1;
+      transition: border-color .25s, box-shadow .25s;
+    }
+    .stat-card:hover {
+      border-color: var(--xp-accent);
+      box-shadow: 0 0 18px var(--xp-accent-glow);
+    }
+    .stat-num {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .stat-label {
+      color: var(--xp-muted);
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-top: .15rem;
+    }
+    .c-accent { color: var(--xp-accent); }
+    .c-green  { color: var(--xp-green); }
+    .c-amber  { color: var(--xp-amber); }
+
+    /* ── Section Title ────────────────────────────────── */
+    .section-title {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--xp-muted);
+      margin-bottom: .8rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .section-title i { font-size: .9rem; }
+
+    /* ══════════════════════════════════════════════════
+       STORY ROW — Full-width horizontal bar
+       ══════════════════════════════════════════════════ */
+    .story-row {
+      background: var(--xp-surface);
+      border: 1px solid var(--xp-border);
+      border-radius: var(--xp-radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: .65rem;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+      position: relative;
+    }
+    .story-row::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3.5px;
+      border-radius: 12px 0 0 12px;
+      background: linear-gradient(180deg, var(--xp-accent), var(--xp-green));
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .story-row:hover {
+      border-color: var(--xp-accent);
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+      transform: translateY(-1px);
+    }
+    .story-row:hover::before { opacity: 1; }
+
+    /* ID badge */
+    .story-id-badge {
+      background: var(--xp-accent-soft);
+      color: var(--xp-accent);
+      font-size: .68rem;
+      font-weight: 800;
+      padding: .3rem .6rem;
+      border-radius: 8px;
+      letter-spacing: .8px;
+      white-space: nowrap;
+      min-width: 62px;
+      text-align: center;
+    }
+
+    /* Content */
+    .story-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .story-content h6 {
+      font-size: .95rem;
+      font-weight: 700;
+      margin: 0 0 .2rem;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .story-content p {
+      font-size: .8rem;
+      color: var(--xp-muted);
+      margin: 0;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Role mini-badges in row */
+    .role-chips {
+      display: flex;
+      gap: .4rem;
+      flex-shrink: 0;
+    }
+    .role-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .25rem .6rem;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+    .role-chip.pilot {
+      background: var(--xp-accent-soft);
+      color: var(--xp-accent);
+      border: 1px solid rgba(108, 99, 255, .25);
+    }
+    .role-chip.copilot {
+      background: var(--xp-green-soft);
+      color: var(--xp-green);
+      border: 1px solid rgba(45, 212, 168, .25);
+    }
+    .role-chip.unassigned {
+      background: var(--xp-amber-soft);
+      color: var(--xp-amber);
+      border: 1px solid rgba(245, 166, 35, .2);
+    }
+
+    /* Actions */
+    .story-actions {
+      display: flex;
+      gap: .4rem;
+      flex-shrink: 0;
+    }
+    .btn-pair {
+      background: var(--xp-green-soft);
+      border: 1px solid rgba(45, 212, 168, .2);
+      color: var(--xp-green);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .4rem .85rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      transition: all .2s;
+      cursor: pointer;
+    }
+    .btn-pair:hover {
+      background: var(--xp-green-glow);
+      border-color: var(--xp-green);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px var(--xp-green-glow);
+      color: var(--xp-green);
+    }
+    .btn-del {
+      background: transparent;
+      border: 1px solid var(--xp-border);
+      color: var(--xp-muted);
+      font-size: .78rem;
+      padding: .4rem .5rem;
+      border-radius: 8px;
+      transition: all .2s;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .btn-del:hover {
+      color: var(--xp-red);
+      border-color: var(--xp-red);
+      background: var(--xp-red-soft);
+    }
+
+    /* ══════════════════════════════════════════════════
+       MODAL — Pair Assignment
+       ══════════════════════════════════════════════════ */
+    .modal-content {
+      background: var(--xp-surface);
+      border: 1px solid var(--xp-border);
+      border-radius: var(--xp-radius-lg);
+      box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
+    .modal-header {
+      border-bottom: 1px solid var(--xp-border);
+      padding: 1.1rem 1.4rem;
+    }
+    .modal-header .modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .modal-body { padding: 1.4rem; }
+    .modal-footer {
+      border-top: 1px solid var(--xp-border);
+      padding: 1rem 1.4rem;
+    }
+
+    .form-label {
+      font-weight: 600;
+      font-size: .75rem;
+      color: var(--xp-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .form-control, .form-control:focus {
+      background: var(--xp-surface-alt);
+      border: 1px solid var(--xp-border);
+      color: var(--xp-text);
+      border-radius: 10px;
+      font-size: .88rem;
+    }
+    .form-control:focus {
+      border-color: var(--xp-accent);
+      box-shadow: 0 0 0 3px var(--xp-accent-glow);
+    }
+    .form-control::placeholder { color: var(--xp-muted); opacity: .55; }
+
+    /* Modal pair assignment */
+    .pair-field {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      margin-bottom: .85rem;
+    }
+    .pair-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .pair-icon.pilot-icon {
+      background: var(--xp-accent-soft);
+      color: var(--xp-accent);
+      border: 1px solid rgba(108, 99, 255, .2);
+    }
+    .pair-icon.copilot-icon {
+      background: var(--xp-green-soft);
+      color: var(--xp-green);
+      border: 1px solid rgba(45, 212, 168, .2);
+    }
+    .pair-field .form-control { flex: 1; }
+
+    .modal-hu-info {
+      background: var(--xp-surface-alt);
+      border: 1px solid var(--xp-border);
+      border-radius: 10px;
+      padding: .85rem 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .modal-hu-info .hu-id {
+      font-size: .65rem;
+      font-weight: 800;
+      color: var(--xp-accent);
+      letter-spacing: .8px;
+      text-transform: uppercase;
+    }
+    .modal-hu-info .hu-name {
+      font-size: .92rem;
+      font-weight: 700;
+      margin-top: .15rem;
+    }
+
+    .btn-save-pair {
+      background: linear-gradient(135deg, var(--xp-green), #27c09a);
+      border: none;
+      color: #0a0d13;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: .55rem 1.5rem;
+      font-size: .85rem;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-save-pair:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--xp-green-glow);
+      color: #0a0d13;
+    }
+    .btn-save-new {
+      background: linear-gradient(135deg, var(--xp-accent), #8b7dff);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: .55rem 1.5rem;
+      font-size: .85rem;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-save-new:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--xp-accent-glow);
+      color: #fff;
+    }
+
+    /* ══════════════════════════════════════════════════
+       SIDEBAR — Team panel
+       ══════════════════════════════════════════════════ */
+    .sidebar-title {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--xp-muted);
+      margin-bottom: .8rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .sidebar-title i { color: var(--xp-green); }
+
+    .team-member {
+      background: var(--xp-surface-alt);
+      border: 1px solid var(--xp-border);
+      border-radius: var(--xp-radius);
+      padding: .85rem 1rem;
+      margin-bottom: .55rem;
+      transition: border-color .2s;
+    }
+    .team-member:hover { border-color: var(--xp-accent); }
+
+    .member-header {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-bottom: .5rem;
+    }
+    .member-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .78rem;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .member-name {
+      font-size: .88rem;
+      font-weight: 700;
+      flex: 1;
+    }
+    .member-count {
+      background: var(--xp-accent-soft);
+      color: var(--xp-accent);
+      font-size: .65rem;
+      font-weight: 700;
+      padding: .15rem .45rem;
+      border-radius: 100px;
+    }
+
+    .member-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+    .member-task {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .75rem;
+      color: var(--xp-text);
+      padding: .25rem .5rem;
+      background: var(--xp-bg);
+      border-radius: 6px;
+    }
+    .member-task .task-role {
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: .1rem .35rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .task-role.is-pilot {
+      background: var(--xp-accent-soft);
+      color: var(--xp-accent);
+    }
+    .task-role.is-copilot {
+      background: var(--xp-green-soft);
+      color: var(--xp-green);
+    }
+    .member-task .task-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-empty {
+      text-align: center;
+      padding: 2rem .5rem;
+      color: var(--xp-muted);
+    }
+    .sidebar-empty i { font-size: 2rem; opacity: .35; display: block; margin-bottom: .5rem; }
+    .sidebar-empty p { font-size: .8rem; margin: 0; }
+
+    .sidebar-divider {
+      border: none;
+      border-top: 1px solid var(--xp-border);
+      margin: 1rem 0;
+    }
+
+    /* ── Empty State (main) ───────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--xp-muted);
+    }
+    .empty-state i { font-size: 3rem; opacity: .3; display: block; margin-bottom: .8rem; }
+    .empty-state h5 { color: var(--xp-text); font-weight: 700; font-size: 1.05rem; }
+    .empty-state p { font-size: .85rem; max-width: 340px; margin: .4rem auto 0; }
+
+    /* ── Toast ────────────────────────────────────────── */
+    .xp-toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      background: var(--xp-surface);
+      border: 1px solid var(--xp-green);
+      border-radius: var(--xp-radius);
+      padding: .75rem 1.2rem;
+      color: var(--xp-green);
+      font-weight: 600;
+      font-size: .82rem;
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    }
+    .xp-toast.show { transform: translateY(0); opacity: 1; }
+    .xp-toast.error { border-color: var(--xp-red); color: var(--xp-red); }
+
+    /* ── Animations ───────────────────────────────────── */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .anim-row {
+      animation: slideIn .35s cubic-bezier(.34, 1.56, .64, 1) both;
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 992px) {
+      .app-layout { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        min-width: 100%;
+        max-height: none;
+        position: static;
+        border-left: none;
+        border-top: 1px solid var(--xp-border);
+      }
+      .main-content { padding: 1rem; }
+    }
+    @media (max-width: 576px) {
+      .stats-bar { flex-direction: column; }
+      .story-row { flex-wrap: wrap; }
+      .role-chips { width: 100%; order: 5; }
+      .story-actions { order: 6; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <header class="xp-header">
+    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+      <div class="brand">
+        <i class="bi bi-kanban"></i>
+        <span class="brand-text">XP Board</span>
+        <span class="xp-tag ms-1">Pair Programming</span>
+      </div>
+      <button class="btn btn-xp-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaHU" id="btnAbrirModal">
+        <i class="bi bi-plus-lg me-1"></i> Agregar HU
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════ APP LAYOUT ═══════════ -->
+  <div class="app-layout">
+
+    <!-- ──── MAIN CONTENT ──── -->
+    <div class="main-content">
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-num c-accent" id="statTotal">0</div>
+          <div class="stat-label">Historias</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num c-green" id="statAsignadas">0</div>
+          <div class="stat-label">Con Pareja</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num c-amber" id="statPendientes">0</div>
+          <div class="stat-label">Sin Asignar</div>
+        </div>
+      </div>
+
+      <!-- Stories list -->
+      <div class="section-title">
+        <i class="bi bi-journal-code"></i> Historias de Usuario
+      </div>
+      <div id="listaHistorias">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ──── SIDEBAR ──── -->
+    <aside class="sidebar">
+      <div class="sidebar-title">
+        <i class="bi bi-people-fill"></i> Equipo y Roles
+      </div>
+      <div id="sidebarTeam">
+        <!-- Rendered by JS -->
+      </div>
+    </aside>
+  </div>
+
+  <!-- ═══════════ MODAL: Nueva HU ═══════════ -->
+  <div class="modal fade" id="modalNuevaHU" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-bookmark-plus" style="color:var(--xp-accent)"></i> Nueva Historia de Usuario
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formNuevaHU" autocomplete="off">
+            <div class="mb-3">
+              <label class="form-label" for="inputTitulo">Título de la Historia</label>
+              <input type="text" class="form-control" id="inputTitulo" placeholder="Ej: Registro de usuarios" required>
+            </div>
+            <div class="mb-0">
+              <label class="form-label" for="inputDescripcion">Descripción corta</label>
+              <textarea class="form-control" id="inputDescripcion" rows="3" placeholder="Describe brevemente la funcionalidad…"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-save-new" id="btnGuardarHU">
+            <i class="bi bi-check-lg me-1"></i> Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ MODAL: Asignar Pareja ═══════════ -->
+  <div class="modal fade" id="modalPareja" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-people-fill" style="color:var(--xp-green)"></i> Asignar Pareja y Roles
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <!-- HU info -->
+          <div class="modal-hu-info">
+            <div class="hu-id" id="pairHuId">HU-001</div>
+            <div class="hu-name" id="pairHuTitle">—</div>
+          </div>
+
+          <!-- Pair fields -->
+          <div class="pair-field">
+            <div class="pair-icon pilot-icon"><i class="bi bi-airplane-fill"></i></div>
+            <input type="text" class="form-control" id="pairPiloto" placeholder="Nombre del piloto">
+          </div>
+          <div class="pair-field">
+            <div class="pair-icon copilot-icon"><i class="bi bi-person-badge-fill"></i></div>
+            <input type="text" class="form-control" id="pairCopiloto" placeholder="Nombre del copiloto">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-save-pair" id="btnGuardarPareja">
+            <i class="bi bi-check2-all me-1"></i> Guardar Pareja
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ TOAST ═══════════ -->
+  <div class="xp-toast" id="toast">
+    <i class="bi bi-check-circle-fill"></i>
+    <span id="toastMsg">Operación exitosa</span>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
